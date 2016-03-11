@@ -154,7 +154,7 @@ local function loadDict(loadDir, saveDict)
     if loadDir ~= nil then
         dictDir = loadDir
     end
-    dictDir = SHIORI_PATH .. dictDir
+    dictDir = SHIORI_PATH_ANSI .. dictDir
     local dictReg = "^(.*)%." .. CONFIG.dictExt .. "$"
     DICT = DICT or {}
     local function loopDir(dir, table)
@@ -163,10 +163,23 @@ local function loadDict(loadDir, saveDict)
             if entry ~= "." and entry ~= ".." then -- ignore . and ..
                 local fullFilename = dir .. "/" .. entry
                 local attr = lfs.attributes(fullFilename)
-                if attr.mode == "directory" then
+                local mode = nil
+                -- 兼容 lfs 无法获取目录
+                if attr ~= nil and attr.mode ~= nil then
+                    mode = attr.mode
+                else
+                    local f = io.open(fullFilename)
+                    if f then
+                        mode = "file"
+                        f:close()
+                    else
+                        mode = "directory"
+                    end
+                end
+                if mode == "directory" then
                     table[eKey] = table[eKey] or {}
                     loopDir(fullFilename, table[eKey])
-                elseif attr.mode == "file" then
+                elseif mode == "file" then
                     -- check if it is tdc file
                     local name = string.match(entry, dictReg)
                     if name ~= nil then

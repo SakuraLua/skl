@@ -4,21 +4,27 @@ local shiori = require("skl.shiori")
 log = base.log
 
 function load(shiori_path)
-    local status, ret = pcall(shiori.load, shiori_path)
+    local status, ret = xpcall(
+        function() return shiori.load() end,
+        function(err) log("Shiori load error: " .. err, true) end
+    )
     if status then
         return ret
     else
-        log("Load error: " .. ret, true)
+        -- log("Load error: " .. ret)
         return false
     end
 end
 
 function unload()
-    local status, ret = pcall(shiori.unload)
+    local status, ret = xpcall(
+        function() return shiori.unload() end,
+        function(err) log("Shiori unload error: " .. err, true) end
+    )
     if status then
         return ret
     else
-        log("Unload error: " .. ret, true)
+        -- log("Unload error: " .. ret)
         return false
     end
 end

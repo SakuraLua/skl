@@ -18,12 +18,12 @@ local function createResonse(tbl)
 end
 
 -- SHIORI load
-function shiori.load(shiori_path)
+function shiori.load()
     log("-.-- shiori load start.")
     math.randomseed(SKL_BOOT_TIME)
 
     -- init for basic variables
-    local savefilename = SHIORI_PATH .. CONFIG.saveDataFile
+    local savefilename = SHIORI_PATH_ANSI .. CONFIG.saveDataFile
     local FH = io.open(savefilename, "r")
     SAVEDATA = nil
     if FH ~= nil then

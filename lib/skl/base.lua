@@ -15,7 +15,7 @@ function base.log(message, isError)
         seMessage = base.serialize(message)
     end
     if isError then
-        seMessage = seMessage .. "\n" .. debug.traceback()
+        seMessage = seMessage .. "\r\n" .. debug.traceback()
     end
     date = os.date("[%c] ")
     if seMessage:sub(1, 2) == "+ " then
@@ -26,9 +26,9 @@ function base.log(message, isError)
         lastClock = os.clock()
     end
     
-    logMessage = date .. string.gsub(seMessage, "\n", "\n" .. date) .. "\n"
+    logMessage = date .. string.gsub(seMessage, "\r?\n", "\r\n" .. date) .. "\r\n"
     if CONFIG.logFile and (isError or not CONFIG.logOnlyError) then
-        FH = io.open((SHIORI_PATH or '') .. CONFIG.logFile, "ab")
+        FH = io.open((SHIORI_PATH_ANSI or '') .. CONFIG.logFile, "ab")
         if FH ~= nil then
             FH:write(logMessage)
             io.close(FH)
@@ -147,12 +147,14 @@ end
 function base.reply(x, tbl)
     rettbl = {}
     if type(x) == "function" then
-        f, rettbl = pcall(x, tbl)
+        f, rettbl = xpcall(
+            function() return x(tbl) end,
+            function(err) log("Error when reply using function: " .. err, true) end
+        )
         if f then
             return base.reply(rettbl, tbl)
         else
-            log("Error when reply using function: " .. rettbl)
-            log(x)
+            return nil
         end
         return nil
     end

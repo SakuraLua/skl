@@ -1,5 +1,5 @@
 return {
-	logFile = "lua.log", -- 日志文件
+	logFile = "profile/lua.log", -- 日志文件
 	logOnlyError = false, -- 只记录错误
     debugMenuKey = "f6", -- 调试菜单
     restartKey = "f7", -- 重新加載辭書
@@ -24,10 +24,10 @@ return {
         }
     },
     saori = {
-        -- ChConverter = {
-        --    path = "skl/saori/ChConverter.dll",
-        --    preload = true
-        -- }
+        --ChConverter = {
+        --   path = "skl/saori/ChConverter.dll",
+        --   preload = true
+        --}
     },
 	defaultSaveData = {
 		

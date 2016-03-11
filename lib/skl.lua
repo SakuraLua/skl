@@ -35,7 +35,7 @@ local function saveData()
     if type(SAVEDATA) ~= "table" then
         return false
     end 
-    local FH = io.open(SHIORI_PATH .. CONFIG.saveDataFile, "w")
+    local FH = io.open(SHIORI_PATH_ANSI .. CONFIG.saveDataFile, "w")
     if FH ~= nil then
         SAVEDATA["sum_sec"] = require("skl.runtime").sum_sec()
         FH:write("return " .. require("skl.base").serialize(SAVEDATA, 1));

@@ -12,7 +12,7 @@ function chc.init()
     end
     if driver == "opencc" then
         -- load opencc
-        local ccLibPath = SHIORI_PATH .. "skl/opencc/"
+        local ccLibPath = SHIORI_PATH_ANSI .. "skl/opencc/"
         ccLib = alien.load(ccLibPath .. "opencc.dll")
         -- (ptr configPointer) opencc_open(configPath)
         ccLib.opencc_open:types("pointer", "string")

@@ -23,14 +23,16 @@ local function setFReq(f)
 end
 
 function ai.loadScript(fileName, req)
-    local sklEvent = SHIORI_PATH .. "skl/scripts/" .. fileName .. ".lua"
-    local srEvent = SHIORI_PATH .. "scripts/" .. fileName .. ".lua"
+    local sklEvent = SHIORI_PATH_ANSI .. "skl/scripts/" .. fileName .. ".lua"
+    local srEvent = SHIORI_PATH_ANSI .. "scripts/" .. fileName .. ".lua"
     
-    local func = nil
+    local func, x, y = nil, io.open(srEvent), io.open(sklEvent)
     
-    if lfs.attributes(srEvent) then
+    if x then
+        x:close()
         func = loadfile(srEvent)
-    elseif lfs.attributes(sklEvent) then
+    elseif y then
+        y:close()
         func = loadfile(sklEvent)
     end
     
@@ -46,9 +48,19 @@ function ai.handle(req)
     if not req.ID then
         return rettbl
     end
+    
+    if req.ID == "OnSecondChange" then
+        local dispatch = require("async.dispatch")
+        local one = dispatch.process()
+        if one ~= nil then
+            return base.reply(one)
+        end
+    end
+
     -- use second change event to process queue
     if #sendQueue > 0 and req.ID == "OnSecondChange" then
-        return table.remove(sendQueue, 1)
+        local r = table.remove(sendQueue, 1)
+        return r
     end
     
     if subscribe[req.ID] then

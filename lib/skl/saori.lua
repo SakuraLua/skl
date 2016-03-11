@@ -4,7 +4,7 @@ local saori = {}
 local saoriStor = {}
 
 local function loadSaori(filename)
-    filename = SHIORI_PATH .. filename
+    filename = SHIORI_PATH_ANSI .. filename
     local pathName = filename:gmatch("(.*[/\\]).*$", "")()
     local libSr = alien.load(filename)
     libSr.load:types("char", "string", "long") -- (bool) load(module_path, length)

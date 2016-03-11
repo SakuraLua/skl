@@ -8,6 +8,7 @@ local Choice = require("functions.choice")
 
 menu.main = {
     config = {
+        id = "skl_main",
         rows = 9,
         title = (DICT.menus and DICT.menus.maintitle)
                     or "\\0\\b[2]需要帮忙吗\\_q\\n\\n[half]",
@@ -43,6 +44,7 @@ end
 -------------------- 实用工具 --------------------
 menu.utils = {
     config = {
+        id = "skl_utils",
         title = [[\0\b[2]「实用工具」\_q\n[half]\n]],
         rows = 9,
         cols = 1,
@@ -54,6 +56,7 @@ menu.utils = {
 -------------------- 偏好设定 --------------------
 menu.basic = {
     config = {
+        id = "skl_basic",
         title = "\\0\\b[2]「偏好設定」\\_q\\n\\n[half]",
         rows = 9,
         cols = 3,
@@ -122,6 +125,7 @@ end
 -------------------- 个人设定 --------------------
 menu.personal = {
     config = {
+        id = "skl_personal",
         title = "\\0\\b[2]「个人设置」\\_q\\n鼠标单击可修改。\\n\\n[half]",
         rows = 9,
         cols = 1,

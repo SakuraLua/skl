@@ -1,6 +1,5 @@
-
-
-local core = require "alien.core"
+local _M = require "alien_c"
+local alien = _M
 local io = require "io"
 
 local pairs, ipairs = pairs, ipairs
@@ -11,17 +10,16 @@ local type = type
 local rawset = rawset
 local unpack = unpack
 local math = math
-local print = print
 
-module "alien"
+local load, callback = alien.load, alien.callback
 
-loaded = {}
+_M.loaded = {}
 
 local load_library, find_library = {}, {}
 
 local function find_library_helper(libname, opt)
-  local expr = '/[^() ]*lib' .. libname .. '\.so[^() ]*'
-  local cmd = '/sbin/ldconfig ' .. opt .. 
+  local expr = '/[^() ]*lib' .. libname .. '%.so[^() ]*'
+  local cmd = '/sbin/ldconfig ' .. opt ..
     ' 2>/dev/null | egrep -o "' .. expr .. '"'
   local pipe = io.popen(cmd)
   if pipe then
@@ -41,27 +39,27 @@ function find_library.bsd(libname)
 end
 
 function find_library.darwin(libname)
-  local ok, lib = pcall(core.load, libname .. ".dylib")
+  local ok, lib = pcall(load, libname .. ".dylib")
   if ok then return lib end
-  ok, lib = pcall(core.load, libname .. ".framework/" .. libname)
+  ok, lib = pcall(load, libname .. ".framework/" .. libname)
   if ok then return lib end
   return nil
 end
 
 local function load_library_helper(libname, libext)
   if libname:match("/") or libname:match("%" .. libext) then
-    return core.load(libname)
+    return load(libname)
   else
-    local ok, lib = pcall(core.load, "lib" .. libname .. libext)
+    local ok, lib = pcall(load, "lib" .. libname .. libext)
     if not ok then
-      ok, lib = pcall(core.load, "./lib" .. libname .. libext)
+      ok, lib = pcall(load, "./lib" .. libname .. libext)
       if not ok then
-	local name = find_library[core.platform](libname)
-	if name then
-	  lib = core.load(name)
-	else
-	  error("library " .. libname .. " not found")
-	end
+        local name = find_library[alien.platform](libname)
+        if name then
+          lib = load(name)
+        else
+          return nil, "library " .. libname .. " not found"
+        end
       end
     end
     return lib
@@ -69,42 +67,38 @@ local function load_library_helper(libname, libext)
 end
 
 function load_library.linux(libname)
-  return load_library_helper(libname, ".so")
+  local lib, errmsg = load_library_helper(libname, ".so")
+  if not lib then error (errmsg) end
+  return lib
 end
 
 load_library.bsd = load_library.linux
 
 function load_library.darwin(libname)
-  return load_library_helper(libname, ".dylib")
+  local lib, errmsg = load_library_helper(libname, ".dylib")
+  if not lib then
+    lib, errmsg = load_library_helper(libname, ".so")
+  end
+  if not lib then error (errmsg) end
+  return lib
 end
-
-setmetatable(load_library, { __index = function (t, plat)
-					 return core.load
-				       end } )
 
 function load_library.windows(libname)
-  return core.load(libname)
+  return load(libname)
 end
 
-setmetatable(loaded, { __index = function (t, libname)
-				   local lib = 
-				     load_library[core.platform](libname)
-				   t[libname] = lib
-				   return lib
-				 end })
+setmetatable(_M.loaded, { __index = function (t, libname)
+                                      local lib = load_library[alien.platform](libname)
+                                      t[libname] = lib
+                                      return lib
+                                    end, __mode = "kv" })
 
-setmetatable(_M, { __index = loaded })
-
-for name, f in pairs(core) do
-  _M[name] = f
+function _M.load(libname)
+  return _M.loaded[libname]
 end
 
-function load(libname)
-  return loaded[libname]
-end
-
-function callback(f, ...)
-  local cb = core.callback(f)
+function _M.callback(f, ...)
+  local cb = callback(f)
   cb.types(cb, ...)
   return cb
 end
@@ -112,15 +106,20 @@ end
 local array_methods = {}
 
 local function array_next(arr, i)
-   if i < arr.length then
-      return i + 1, arr[i + 1]
-   else
-      return nil
-   end
+  if i < arr.length then
+    return i + 1, arr[i + 1]
+  else
+    return nil
+  end
 end
 
 function array_methods:ipairs()
-   return array_next, self, 0
+  return array_next, self, 0
+end
+
+function array_methods:realloc(newlen)
+  self.buffer:realloc(newlen * self.size)
+  self.length = newlen
 end
 
 local function array_get(arr, key)
@@ -142,7 +141,7 @@ local function array_set(arr, key, val)
     end
     local offset = (key - 1) * arr.size + 1
     arr.buffer:set(offset, val, arr.type)
-    if type(val) == "string" or type(val) == "userdata" then
+    if arr.type == "pointer" then
       arr.pinned[key] = val
     end
   else
@@ -150,8 +149,8 @@ local function array_set(arr, key, val)
   end
 end
 
-function array(t, length, init)
-  local ok, size = pcall(core.sizeof, t)
+function _M.array(t, length, init)
+  local ok, size = pcall(alien.sizeof, t)
   if not ok then
     error("type " .. t .. " does not exist")
   end
@@ -160,14 +159,20 @@ function array(t, length, init)
     length = #length
   end
   local arr = { type = t, length = length, size = size, pinned = {} }
+  -- FIXME: When Lua 5.1 support is dropped, add a __len metamethod
   setmetatable(arr, { __index = array_get, __newindex = array_set })
   if type(init) == "userdata" then
     arr.buffer = init
   else
-    arr.buffer = core.buffer(size * length)
+    arr.buffer = alien.buffer(size * length)
     if type(init) == "table" then
       for i = 1, length do
-	arr[i] = init[i]
+        if type(init[i]) == "string" then
+          local offset = (i - 1) * size + 1
+          arr.pinned[i] = alien.buffer(#init[i] + 1)
+          arr.buffer:set(offset, arr.pinned[i], "pointer")
+        end
+        arr[i] = init[i]
       end
     end
   end
@@ -175,7 +180,7 @@ function array(t, length, init)
 end
 
 local function struct_new(s_proto, ptr)
-  local buf = core.buffer(ptr or s_proto.size)
+  local buf = alien.buffer(ptr or s_proto.size)
   local function struct_get(_, key)
     if s_proto.offsets[key] then
       return buf:get(s_proto.offsets[key] + 1, s_proto.types[key])
@@ -191,7 +196,7 @@ local function struct_new(s_proto, ptr)
     end
   end
   return setmetatable({}, { __index = struct_get, __newindex = struct_set,
-			    __call = function () return buf end })
+                            __call = function () return buf end })
 end
 
 local function struct_byval(s_proto)
@@ -209,33 +214,33 @@ local function struct_byval(s_proto)
   return unpack(types)
 end
 
-function defstruct(t)
+function _M.defstruct(t)
   local off = 0
   local names, offsets, types = {}, {}, {}
   for _, field in ipairs(t) do
     local name, type = field[1], field[2]
     names[#names + 1] = name
-    off = math.ceil(off / core.align(type)) * core.align(type)
+    off = math.ceil(off / alien.align(type)) * alien.align(type)
     offsets[name] = off
     types[name] = type
-    off = off + core.sizeof(type)
+    off = off + alien.sizeof(type)
   end
   return { names = names, offsets = offsets, types = types, size = off, new = struct_new,
-	    byval = struct_byval }
+           byval = struct_byval }
 end
 
-function byval(buf)
+function _M.byval(buf)
   if buf.size then
     local size = buf.size
     local types = { "char", "short"}
     local vals = {}
     for i = 1, size, 4 do
       if size - i == 0 then
-	vals[#vals + 1] = buf:get(i, "char")
+        vals[#vals + 1] = buf:get(i, "char")
       elseif size - i == 1 then
-	vals[#vals + 1] = buf:get(i, "short")
+        vals[#vals + 1] = buf:get(i, "short")
       else
-	vals[#vals + 1] = buf:get(i, "int")
+        vals[#vals + 1] = buf:get(i, "int")
       end
     end
     return unpack(vals)
@@ -243,3 +248,5 @@ function byval(buf)
     error("this type of buffer can't be passed by value")
   end
 end
+
+return alien

@@ -12,18 +12,6 @@ end
 SKL_INITED = true
 SKL_PRODUCT_NAME = "SakuraLua"
 SKL_PRODUCT_VERSION = "0.1"
--- init paths
-package.path = "./?.lua"
-package.cpath = "./clibs/?.dll"
-local luaPath = {"", "lib/", "lua/", "skl/", "skl/lib/", "skl/lua/"}
-local cPath = {"clibs/", "skl/clibs/"}
-for i = 1, #luaPath do
-    package.path = package.path .. ";" .. SHIORI_PATH .. luaPath[i] .. "?.lua"
-    package.path = package.path .. ";" .. SHIORI_PATH .. luaPath[i] .. "?.luac"
-end
-for i = 1, #cPath do
-    package.cpath = package.cpath .. ";" .. SHIORI_PATH .. cPath[i] .. "?.dll"
-end
 
 require("global_functions")
 

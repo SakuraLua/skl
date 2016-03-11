@@ -13,8 +13,8 @@ dm.menu.config = {
     items = {
         {"执行 Lua 脚本", RS("\\![open,inputbox,OnDebugLuaEval]请务必使用 return 返回，或使用 log 记录想要查询的信息。\\e")},
         {"内置机制执行樱语", RS("\\![open,inputbox,OnDebugSakuraEval]将会使用内置机制执行输入的樱花语法。\\e")},
-        {"重载 Shiori", RS("\\![reload,shiori]辞书重载完成。\\e")},
-        {"重载人格", RS("\\![reload,ghost]\\e")},
+        {"刷新 Shiori", RS("\\![reload,shiori]辞书刷新完成。\\e")},
+        {"刷新人格", RS("\\![reload,ghost]\\e")},
         {"返回主菜单", "OnOpenMenu", "main"}
     }
 }
