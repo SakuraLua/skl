@@ -19,7 +19,9 @@ function chc.init()
         -- (int status) opencc_close(ptr configPointer)
         ccLib.opencc_close:types("int", "pointer")
         -- (string result) opencc_convert_utf8(ptr configPointer, string in, int length)
-        ccLib.opencc_convert_utf8:types("string", "pointer", "string", "int")
+        ccLib.opencc_convert_utf8:types("pointer", "pointer", "string", "int")
+        -- (void) opencc_convert_utf8_free 	(char *str)
+        ccLib.opencc_convert_utf8_free:types("void", "pointer")
         
         -- open config files
         ccPointers.chs = ccLib.opencc_open(ccLibPath .. "tw2sp.json")
@@ -38,7 +40,9 @@ function chc.convert(to, str)
     if driver == "opencc" then
         if ccPointers[to] then
             local ret = ccLib.opencc_convert_utf8(ccPointers[to], str, str:len())
-            return ret
+            local str = alien.tostring(ret)
+            ccLib.opencc_convert_utf8_free(ret)
+            return str
         end
     elseif driver == "ChConverter" then
         local chTo = "simplified"
