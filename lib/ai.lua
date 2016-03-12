@@ -30,12 +30,13 @@ function ai.loadScript(fileName, req)
     local func, x, y = nil, io.open(srEvent), io.open(sklEvent)
     
     if x then
-        x:close()
         func = loadfile(srEvent)
     elseif y then
-        y:close()
         func = loadfile(sklEvent)
     end
+    
+    if x then io.close(x) end
+    if y then io.close(y) end
     
     if func then
         return setFReq(func, req)
