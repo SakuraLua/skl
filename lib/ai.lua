@@ -2,6 +2,7 @@ local ai = {}
 local base = require("skl.base")
 local response = require("ai.response")
 local subscribe = require("ai.subscribe")
+local skl = require("skl")
 
 local sendQueue = {}
 
@@ -61,6 +62,11 @@ function ai.handle(req)
     if #sendQueue > 0 and req.ID == "OnSecondChange" then
         local r = table.remove(sendQueue, 1)
         return r
+    end
+    
+    -- save user data every minute
+    if req.ID == "OnMinuteChange" then
+        skl.saveData()
     end
     
     if subscribe[req.ID] then

@@ -23,20 +23,7 @@ function shiori.load()
     math.randomseed(SKL_BOOT_TIME)
 
     -- init for basic variables
-    local savefilename = SHIORI_PATH_ANSI .. CONFIG.saveDataFile
-    local FH = io.open(savefilename, "r")
-    SAVEDATA = nil
-    if FH ~= nil then
-        local string = FH:read("*all")
-        SAVEDATA = base.unserialize(string)
-        FH:close()
-    end
-    if SAVEDATA == nil then
-        SAVEDATA = CONFIG.defaultSaveData
-        SAVEDATA.sum_sec = 0
-        SAVEDATA.aiTalkInterval = "60"
-        SAVEDATA.simplifiy = "cht"
-    end
+    require("skl").loadData()
     
     require("skl.chc").init()
     require("skl.saori").init()
