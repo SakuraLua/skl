@@ -3,6 +3,16 @@ local base = {}
 local chc = require("skl.chc")
 local lastClock = os.clock()
 
+local udpPeer
+local socket = require("socket")
+local logToUdp = function(message, isError)
+    if udpPeer == nil then
+        udpPeer = socket.udp()
+        udpPeer:setpeername('127.0.0.1', 27016)
+    end
+    udpPeer:send(message)
+end
+
 function base.log(message, isError)
     local seMessage = message
     if type(message) == "function" then
@@ -34,6 +44,7 @@ function base.log(message, isError)
             io.close(FH)
         end
     end
+    logToUdp(logMessage)
     if CONFIG.msgBoxWhenError and isError then
         cMsgbox(seMessage)
     end
