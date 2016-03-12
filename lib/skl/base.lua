@@ -10,7 +10,11 @@ local logToUdp = function(message, isError)
         udpPeer = socket.udp()
         udpPeer:setpeername('127.0.0.1', 27016)
     end
-    udpPeer:send(message)
+    if isError then
+        udpPeer:send("\27\02" .. message)
+    else
+        udpPeer:send("\27\01" .. message)
+    end
 end
 
 function base.log(message, isError)
@@ -44,7 +48,7 @@ function base.log(message, isError)
             io.close(FH)
         end
     end
-    logToUdp(logMessage)
+    logToUdp(logMessage, isError)
     if CONFIG.msgBoxWhenError and isError then
         cMsgbox(seMessage)
     end
